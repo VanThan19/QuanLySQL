@@ -1,0 +1,144 @@
+﻿CREATE DATABASE QLSP
+
+ON PRIMARY
+(
+   NAME = QLSP_Data,
+   FILENAME = 'D:\QLSP_Data.mdf',
+   SIZE = 50MB,
+   MAXSIZE = 200MB,
+   FILEGROWTH = 10%
+)
+LOG ON
+(
+   NAME = QLSP_Log,
+   FILENAME = 'D:\QLSP_Log.ldf',
+   SIZE = 10MB,
+   MAXSIZE = UNLIMITED,
+   FILEGROWTH = 5MB
+);
+GO
+Use QLSP
+
+CREATE TABLE tblVATTU (
+    MaVTu CHAR(4) PRIMARY KEY,
+    TenVtu NVARCHAR(30),
+    DVTinh NVARCHAR(10),
+    DonGia INT
+);
+
+CREATE TABLE tblNHACC (
+    MaNhaCC CHAR(4) PRIMARY KEY,
+    TenNhaCC NVARCHAR(30),
+    DiaChi NVARCHAR(30),
+    DienThoai CHAR(15)
+);
+
+CREATE TABLE tblDONDH (
+    SoDH INT PRIMARY KEY,
+    NgayDH DATETIME,
+    MaNhaCC CHAR(4),
+    FOREIGN KEY (MaNhaCC) REFERENCES tblNHACC(MaNhaCC)
+);
+
+CREATE TABLE tblCTDONDH (
+    SoDH INT,
+    MaVTu CHAR(4),
+    SLDat INT,
+    PRIMARY KEY (SoDH, MaVTu),
+    FOREIGN KEY (SoDH) REFERENCES tblDONDH(SoDH),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+CREATE TABLE tblPNHAP (
+    SoPN CHAR(4) PRIMARY KEY,
+    SoDH INT,
+    NgayNhap DATETIME,
+    FOREIGN KEY (SoDH) REFERENCES tblDONDH(SoDH)
+);
+
+CREATE TABLE tblCTPNHAP (
+    SoPN CHAR(4),
+    MaVTu CHAR(4),
+    SLNhap INT,
+    PRIMARY KEY (SoPN, MaVTu),
+    FOREIGN KEY (SoPN) REFERENCES tblPNHAP(SoPN),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+CREATE TABLE tblPXUAT (
+    SoPX CHAR(4) PRIMARY KEY,
+    NgayXuat DATETIME
+);
+
+CREATE TABLE tblCTPXUAT (
+    SoPX CHAR(4),
+    MaVTu CHAR(4),
+    SLXuat INT,
+    PRIMARY KEY (SoPX, MaVTu),
+    FOREIGN KEY (SoPX) REFERENCES tblPXUAT(SoPX),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+CREATE TABLE tblTONKHO (
+    NAMTHANG CHAR(7),
+    MaVTu CHAR(4),
+    TONGNHAP INT,
+    TONGXUAT INT,
+    SLTonKho INT,
+    PRIMARY KEY (NAMTHANG, MaVTu),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+INSERT INTO tblVATTU VALUES
+('VT01', N'Xi măng', N'Bao', 75000),
+('VT02', N'Gạch đỏ', N'Viên', 5000),
+('VT03', N'Cát vàng', N'Khối', 120000),
+('VT04', N'Sắt phi 12', N'Cây', 150000);
+
+-- Nhập dữ liệu vào bảng tblNHACC
+INSERT INTO tblNHACC VALUES
+('NCC1', N'Công ty VLXD A', N'Hà Nội', '0912345678'),
+('NCC2', N'Công ty VLXD B', N'TP. HCM', '0987654321');
+
+-- Nhập dữ liệu vào bảng tblDONDH
+INSERT INTO tblDONDH VALUES
+(1001, '2024-01-05', 'NCC1'),
+(1002, '2024-01-10', 'NCC2');
+
+-- Nhập dữ liệu vào bảng tblCTDONDH
+INSERT INTO tblCTDONDH VALUES
+(1001, 'VT01', 100),
+(1001, 'VT02', 500),
+(1002, 'VT03', 50),
+(1002, 'VT04', 200);
+
+-- Nhập dữ liệu vào bảng tblPNHAP
+INSERT INTO tblPNHAP VALUES
+('PN01', 1001, '2024-01-07'),
+('PN02', 1002, '2024-01-12');
+
+-- Nhập dữ liệu vào bảng tblCTPNHAP
+INSERT INTO tblCTPNHAP VALUES
+('PN01', 'VT01', 100),
+('PN01', 'VT02', 500),
+('PN02', 'VT03', 50),
+('PN02', 'VT04', 200);
+
+-- Nhập dữ liệu vào bảng tblPXUAT
+INSERT INTO tblPXUAT VALUES
+('PX01', '2024-01-15'),
+('PX02', '2024-01-18');
+
+-- Nhập dữ liệu vào bảng tblCTPXUAT
+INSERT INTO tblCTPXUAT VALUES
+('PX01', 'VT01', 50),
+('PX01', 'VT02', 300),
+('PX02', 'VT03', 20),
+('PX02', 'VT04', 100);
+
+-- Nhập dữ liệu vào bảng tblTONKHO
+INSERT INTO tblTONKHO VALUES
+('2024-01', 'VT01', 100, 50, 50),
+('2024-01', 'VT02', 500, 300, 200),
+('2024-01', 'VT03', 50, 20, 30),
+('2024-01', 'VT04', 200, 100, 100);

@@ -1,0 +1,136 @@
+﻿-- 1. Tạo CSDL QLBanHang với các yêu cầu về kích thước
+CREATE DATABASE BanHang 
+
+ON PRIMARY
+(
+   NAME = BanHang_Data,
+   FILENAME = 'D:\BanHang_Data.mdf',
+   SIZE = 50MB,
+   MAXSIZE = 200MB,
+   FILEGROWTH = 10%
+)
+LOG ON
+(
+   NAME = BanHang_Log,
+   FILENAME = 'D:\BanHang_Log.ldf',
+   SIZE = 10MB,
+   MAXSIZE = UNLIMITED,
+   FILEGROWTH = 5MB
+);
+GO
+-- 2. Sử dụng CSDL vừa tạo
+USE BanHang;
+GO
+
+-- 3. Tạo các bảng theo yêu cầu
+CREATE TABLE tblVATTU (
+    MaVTu CHAR(4) PRIMARY KEY,
+    TenVtu NVARCHAR(30),
+    DVTinh NVARCHAR(10),
+    DonGia INT
+);
+
+CREATE TABLE tblNHACC (
+    MaNhaCC CHAR(4) PRIMARY KEY,
+    TenNhaCC NVARCHAR(30),
+    DiaChi NVARCHAR(30),
+    DienThoai CHAR(15)
+);
+
+CREATE TABLE tblDONDH (
+    SoDH INT PRIMARY KEY,
+    NgayDH DATETIME,
+    MaNhaCC CHAR(4),
+    FOREIGN KEY (MaNhaCC) REFERENCES tblNHACC(MaNhaCC)
+);
+
+CREATE TABLE tblCTDONDH (
+    SoDH INT,
+    MaVTu CHAR(4),
+    SLDat INT,
+    PRIMARY KEY (SoDH, MaVTu),
+    FOREIGN KEY (SoDH) REFERENCES tblDONDH(SoDH),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+
+CREATE TABLE tblPNHAP (
+    SoPN CHAR(4) PRIMARY KEY,
+    SoDH INT,
+    NgayNhap DATETIME,
+    FOREIGN KEY (SoDH) REFERENCES tblDONDH(SoDH)
+);
+
+CREATE TABLE tblCTPNHAP (
+    SoPN CHAR(4),
+    MaVTu CHAR(4),
+    SLNhap INT,
+    PRIMARY KEY (SoPN, MaVTu),
+    FOREIGN KEY (SoPN) REFERENCES tblPNHAP(SoPN),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+CREATE TABLE tblPXUAT (
+    SoPX CHAR(4) PRIMARY KEY,
+    NgayXuat DATETIME
+);
+
+CREATE TABLE tblCTPXUAT (
+    SoPX CHAR(4),
+    MaVTu CHAR(4),
+    SLXuat INT,
+    PRIMARY KEY (SoPX, MaVTu),
+    FOREIGN KEY (SoPX) REFERENCES tblPXUAT(SoPX),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+
+CREATE TABLE tblTONKHO (
+    NAMTHANG CHAR(7),
+    MaVTu CHAR(4),
+    TONGNHAP INT,
+    TONGXUAT INT,
+    SLTonKho INT,
+    PRIMARY KEY (NAMTHANG, MaVTu),
+    FOREIGN KEY (MaVTu) REFERENCES tblVATTU(MaVTu)
+);
+GO
+
+-- 4. Nhập dữ liệu hợp lý
+INSERT INTO tblVATTU VALUES ('VT01', N'Xi măng', N'bao', 120000);
+INSERT INTO tblVATTU VALUES ('VT02', N'Gạch', N'viên', 1500);
+
+INSERT INTO tblNHACC VALUES ('NCC1', N'Công ty VLXD A', N'123 Đường A', '0901234567');
+INSERT INTO tblNHACC VALUES ('NCC2', N'Công ty VLXD B', N'456 Đường B', '0907654321');
+
+INSERT INTO tblDONDH VALUES (1, '2024-02-10', 'NCC1');
+INSERT INTO tblCTDONDH VALUES (1, 'VT01', 100);
+INSERT INTO tblCTDONDH VALUES (1, 'VT02', 500);
+
+INSERT INTO tblPNHAP VALUES ('PN01', 1, '2024-02-12');
+INSERT INTO tblCTPNHAP VALUES ('PN01', 'VT01', 100);
+INSERT INTO tblCTPNHAP VALUES ('PN01', 'VT02', 500);
+
+INSERT INTO tblPXUAT VALUES ('PX01', '2024-02-15');
+INSERT INTO tblCTPXUAT VALUES ('PX01', 'VT01', 50);
+
+INSERT INTO tblTONKHO VALUES ('2024-02', 'VT01', 100, 50, 50);
+GO
+
+-- 5. Xuất cơ sở dữ liệu ra file .sql
+BACKUP DATABASE QLBH TO DISK = 'D:\BanHang_Backup.bak';
+GO
+
+-- 6. Thao tác ATTACH và DETACH CSDL
+-- Gỡ bỏ CSDL
+USE master;
+GO
+ALTER DATABASE QLBH SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+GO
+EXEC sp_detach_db 'BanHang';
+GO
+
+-- Gắn lại CSDL
+EXEC sp_attach_db @dbname = 'BanHang', 
+    @filename1 = 'D:\BanHang_Data.mdf', 
+    @filename2 = 'D:\BanHang_Log.ldf';
+GO
